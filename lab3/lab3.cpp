@@ -5,24 +5,24 @@
 #include <iostream>
 #include <time.h>
 #include <locale.h>
-#define SIZE 5
+#include <queue>
+using namespace std;
 
-void rand_Zap(int k, int* mat, int n) {
-	srand(time(NULL) * k);
-	printf("G%d \n", k);
-	for (int i = 0; i < n; i++)
+void NewGraph(int** G, int n) {
+	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
 			if (i == j) {
-				mat[i * n + j] = 0;
+				G[i][j] = 0;
 			}
 			if (i < j) {
-				mat[i * n + j] = rand() % 2;
-				mat[j * n + i] = mat[i * n + j];
+				G[i][j] = rand() % 2;
+				G[j][i] = G[i][j];
 			}
 		}
+	}
 }
 
-void print_G(int* mat, int n) {
+void print_G(int** G, int n) {
 
 	printf("  ");
 	for (int i = 0; i < n; i++) {
@@ -34,7 +34,7 @@ void print_G(int* mat, int n) {
 		printf("%2d", i + 1);
 		for (int j = 0; j < n; j++) {
 
-			printf("%3d", mat[i * n + j]);
+			printf("%3d", G[i][j]);
 		}
 		printf("\n");
 	}
@@ -43,204 +43,206 @@ void print_G(int* mat, int n) {
 
 }
 
-void copy(int(&mat1)[SIZE][SIZE], int(&mat2)[SIZE][SIZE]) {
-	for (int i = 0; i < SIZE; i++)
-		for (int j = 0; j < SIZE; j++)
-			mat2[i][j] = mat1[i][j];
-}
-
-void otj(int(&constant)[SIZE][SIZE], int(&work)[SIZE][SIZE], int x1, int x2, int st) {
-	int G[SIZE - 1][SIZE - 1], i, j, i1, j1;
-
-	copy(constant, work);
-	for (i = 0; i < SIZE; i++) {
-		work[i][x1] = constant[i][x1] || constant[i][x2];
+void identification(int v1, int v2, int** G, int n) {
+	int x1, x2;
+	int** mat;
+	mat = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		mat[i] = (int*)malloc(n * sizeof(int));
 	}
-
-	for (j = 0; j < SIZE; j++) {
-		work[x1][j] = constant[x1][j] || constant[x2][j];
-	}
-
-	for (i = 0, i1 = x2 + 1; i < SIZE - 1; i++) {
-		for (j = 0, j1 = x2; j < SIZE - 1; j++) {
-			if (j >= x2)
-				j1++;
-			if (i < x2 && j < x2)
-				G[i][j] = work[i][j];
-			if (i < x2 && j >= x2)
-				G[i][j] = work[i][j1];
-			if (i >= x2 && j < x2)
-				G[i][j] = work[i1][j];
-			if (i >= x2 && j >= x2)
-				G[i][j] = work[i1][j1];
-		}
-		if (i >= x2) i1++;
-	}
-	if (constant[x1][x2] == 1 && st == 0)
-		G[x1][x1] = 1;
-	else
-		G[x1][x1] = 0;
-	printf("Результат:\n");
-	print_G(&G[0][0], SIZE - 1);
-}
-
-void ras(int(&constant)[SIZE][SIZE], int x) {
-	int i, j, i1, mat[SIZE + 1][SIZE + 1];
-	x--;
-
-	for (i = 0; i < SIZE; i++) {
-		for (j = 0; j < SIZE; j++) {
-			mat[i][j] = constant[i][j];
+	
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			mat[i][j] = G[i][j];
 		}
 	}
-	for (i = 0; i < SIZE + 1; i++) {
-		for (j = 0; j < SIZE + 1; j++) {
-			if (i == 5 || j == 5) {
-				mat[5][j] = 0;
-				mat[j][5] = 0;
-			}
+
+	if (v1 > v2) {
+		x1 = v1 - 1;
+		x2 = v2 - 1;
+	}
+	else {
+		x1 = v2 - 1;
+		x2 = v1 - 1;
+	}
+
+	for (int i = 0; i < n; i++) {
+		if (mat[x1][i] == 1)
+			mat[x2][i] = 1;
+
+		if (mat[i][x1] == 1)
+			mat[i][x2] = 1;
+	}
+
+	for (int i = 0; i < n; i++) {
+		for (int j = x1; j < n - 1; j++) {
+			mat[i][j] = mat[i][j + 1];
 		}
 	}
-	for (j = 0; j < SIZE; j++) {
-		if (mat[x][j] == 1)
-			if (j % 2 == 0) {
-				mat[5][j] = 1;
-				mat[j][5] = 1;
-				mat[x][j] = 0;
-				mat[j][x] = 0;
-			}
 
+	for (int i = x1; i < n - 1; i++) {
+		for (int j = 0; j < n; j++) {
+			mat[i][j] = mat[i + 1][j];
+		}
 	}
-	mat[x][5] = 1;
-	mat[5][x] = 1;
-	printf("Результат расщепления\n\n");
-	print_G(&mat[0][0], SIZE + 1);
+	print_G(mat, n - 1);
 }
 
-void obed(int(&mat1)[SIZE][SIZE], int(&mat2)[SIZE][SIZE]) {
-	int res[SIZE][SIZE];
-	for (int i = 0; i < SIZE; i++)
-		for (int j = 0; j < SIZE; j++) {
+void obed(int**G1, int** G2, int n) {
+	int** mat1, ** mat2, **res;
+	mat1 = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		mat1[i] = (int*)malloc(n * sizeof(int));
+	}
+	mat2 = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		mat2[i] = (int*)malloc(n * sizeof(int));
+	}
+	res = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		res[i] = (int*)malloc(n * sizeof(int));
+	}
+
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			mat1[i][j] = G1[i][j];
+			mat2[i][j] = G2[i][j];
+		}
+	}
+
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
 			res[i][j] = mat1[i][j] || mat2[i][j];
 		}
-	printf("Результат объединения G1 и G2\n");
-	print_G(&res[0][0], SIZE);
+	}
+	printf("Результат объединения графов: \n");
+	print_G(res, n);
 }
-void perseh(int(&mat1)[SIZE][SIZE], int(&mat2)[SIZE][SIZE]) {
-	int res[SIZE][SIZE];
-	for (int i = 0; i < SIZE; i++)
-		for (int j = 0; j < SIZE; j++) {
-			if (mat1[i][j] == 1 && mat2[i][j] == 1)
-				res[i][j] = 1;
-			else
-				res[i][j] = 0;
+
+void perese4(int** G1, int** G2, int n) {
+	int** mat1, ** mat2, ** res;
+	mat1 = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		mat1[i] = (int*)malloc(n * sizeof(int));
+	}
+	mat2 = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		mat2[i] = (int*)malloc(n * sizeof(int));
+	}
+	res = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		res[i] = (int*)malloc(n * sizeof(int));
+	}
+
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			mat1[i][j] = G1[i][j];
+			mat2[i][j] = G2[i][j];
 		}
-	printf("Результат пересечения G1 и G2\n");
-	print_G(&res[0][0], SIZE);
+	}
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			if (mat1[i][j] == 1 && mat2[i][j] == 1) {
+				res[i][j] = 1;
+		}
+			else {
+				res[i][j] = 0;
+			}
+		}
+	}
+	printf("Результат пересечения графов: \n");
+	print_G(res, n);
 }
-void kolc_sum(int(&mat1)[SIZE][SIZE], int(&mat2)[SIZE][SIZE]) {
-	int res[SIZE][SIZE];
-	for (int i = 0; i < SIZE; i++)
-		for (int j = 0; j < SIZE; j++) {
-			if ((mat1[i][j] == 1 && mat2[i][j] == 0) || (mat1[i][j] == 0 && mat2[i][j] == 1))
-				res[i][j] = 1;
-			else
-				res[i][j] = 0;
+
+void kolcsumm(int** G1, int** G2, int n) {
+	int** mat1, ** mat2, ** res;
+	mat1 = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		mat1[i] = (int*)malloc(n * sizeof(int));
+	}
+	mat2 = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		mat2[i] = (int*)malloc(n * sizeof(int));
+	}
+	res = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		res[i] = (int*)malloc(n * sizeof(int));
+	}
+
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			mat1[i][j] = G1[i][j];
+			mat2[i][j] = G2[i][j];
 		}
-	printf("Результат кольцевой суммы G1 и G2\n");
-	print_G(&res[0][0], SIZE);
+	}
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			if ((mat1[i][j] == 1 && mat2[i][j] == 1) || (mat1[i][j] == 0 && mat2[i][j] == 0)) {
+				res[i][j] = 0;
+			}
+			if ((mat1[i][j] == 1 && mat2[i][j] == 0) || (mat1[i][j] == 0 && mat2[i][j] == 1)) {
+				res[i][j] = 1;
+			}
+		}
+	}
+	printf("Кольцевая сумма графов: \n");
+	print_G(res, n);
 }
 
 int main() {
-	int G1[SIZE][SIZE], G2[SIZE][SIZE], work[SIZE][SIZE], i, x1, x2, j, A[20][20];
-	setlocale(LC_ALL, "Rus");
-	rand_Zap(1, &G1[0][0], SIZE);
-	print_G(&G1[0][0], SIZE);
-	rand_Zap(2, &G2[0][0], SIZE);
-	print_G(&G2[0][0], SIZE);
-
-	printf("Отождествление 1 графа - Введите 2 вершины: ");
-	scanf("%d%d", &x1, &x2);
-	if (x1 > x2) {
-		i = x1;
-		x1 = x2;
-		x2 = i;
+	int** G1 = NULL, ** G2 = NULL;;
+	int x1 = NULL, x2 = NULL;
+	int n;
+	setlocale(LC_ALL, "RUS");
+	srand(time(NULL));
+	printf("Введите размер графа: ");
+	scanf("%d", &n);
+	G1 = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		G1[i] = (int*)malloc(n * sizeof(int));
 	}
-
-	if ((x1 >= 1) && (x2 <= SIZE)) {
-		x1--; x2--;
-		otj(G1, work, x1, x2, 0);
+	G2 = (int**)malloc(n * sizeof(int*));
+	for (int i = 0; i < n; i++) {
+		G2[i] = (int*)malloc(n * sizeof(int));
 	}
-	else
-		printf("\nНет вершин(ы)\n");
+	
+	NewGraph(G1, n);
+	print_G(G1, n);
+	NewGraph(G2, n);
+	print_G(G2, n);
 
-	printf("Отождествление 2 графа - Введите 2 вершины: ");
-	scanf("%d%d", &x1, &x2);
-	if (x1 > x2) {
-		i = x1;
-		x1 = x2;
-		x2 = i;
-	}
+	printf("Введите 2 вершины 1 графа для отождествления: ");
+	scanf("%d %d", &x1, &x2);
+	identification(x1, x2, G1, n);
 
-	if ((x1 >= 1) && (x2 <= SIZE)) {
-		x1--; x2--;
-		otj(G2, work, x1, x2, 0);
-	}
-	else
-		printf("\nНет вершин(ы)\n");
+	printf("Введите 2 вершины 2 графа для отождествления: ");
+	scanf("%d %d", &x1, &x2);
+	identification(x1, x2, G2, n);
 
-	printf("Стягивание ребра в 1 графе - Введите 2 вершины: ");
-	scanf("%d%d", &x1, &x2);
-	if (x1 > x2) {
-		i = x1;
-		x1 = x2;
-		x2 = i;
-	}
-	if ((x1 >= 1) && (x2 <= SIZE)) {
+	printf("\nВВедите 2 вершины в матрице 1 для стягивания: ");
+	for (;;)
+	{
+		scanf_s("%d", &x1);
+		scanf_s("%d", &x2);
 		if (G1[x1 - 1][x2 - 1] == 1)
-		{
-			x1--; x2--;
-			otj(G1, work, x1, x2, 1);
-		}
-		else printf("\nНет ребра\n");
+			break;
+		else
+			printf("Ошибка, введите заново: ");
 	}
-	else
-		printf("\nНет вершин(ы)\n");
-
-	printf("Стягивание ребра во 2 графе - Введите 2 вершины: ");
-	scanf("%d%d", &x1, &x2);
-	if (x1 > x2) {
-		i = x1;
-		x1 = x2;
-		x2 = i;
-	}
-	if ((x1 >= 1) && (x2 <= SIZE)) {
+	identification(x1, x2, G1, n);
+	
+	printf("\nВведите 2 вершины в матрице 2 для стягивания: ");
+	for (;;) {
+		scanf_s("%d", &x1);
+		scanf_s("%d", &x2);
 		if (G2[x1 - 1][x2 - 1] == 1)
-		{
-			x1--; x2--;
-			otj(G2, work, x1, x2, 1);
-		}
-		else printf("\nНет ребра\n");
+			break;
+		else
+			printf("Ошибка, введите заново: ");
 	}
-	else
-		printf("\nНет вершин(ы)\n");
+	identification(x1, x2, G2, n);
 
-	printf("Введите вершину для расщепления в 1 графе: ");
-	scanf("%d", &x1);
-	ras(G1, x1);
-	getchar();
-
-	printf("Введите вершину для расщепления во 2 графе: ");
-	scanf("%d", &x1);
-	ras(G2, x1);
-	getchar();
-
-	obed(G1, G2);
-	getchar();
-
-	perseh(G1, G2);
-	getchar();
-
-	kolc_sum(G1, G2);
-	getchar();
+	obed(G1, G2, n);
+	perese4(G1, G2, n);
+	kolcsumm(G1, G2, n);
 }
