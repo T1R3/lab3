@@ -43,7 +43,7 @@ void print_G(int** G, int n) {
 
 }
 
-void identification(int v1, int v2, int** G, int n) {
+void otojd(int v1, int v2, int** G, int n) {
 	int x1, x2;
 	int** mat;
 	mat = (int**)malloc(n * sizeof(int*));
@@ -86,6 +86,10 @@ void identification(int v1, int v2, int** G, int n) {
 		}
 	}
 	print_G(mat, n - 1);
+	for (int i = 0; i < n; i++) {
+		free(mat[i]);
+	}
+	free(mat);
 }
 
 void obed(int**G1, int** G2, int n) {
@@ -117,6 +121,18 @@ void obed(int**G1, int** G2, int n) {
 	}
 	printf("Результат объединения графов: \n");
 	print_G(res, n);
+	for (int i = 0; i < n; i++) {
+		free(mat1[i]);
+	}
+	free(mat1);
+	for (int i = 0; i < n; i++) {
+		free(mat2[i]);
+	}
+	free(mat2);
+	for (int i = 0; i < n; i++) {
+		free(res[i]);
+	}
+	free(res);
 }
 
 void perese4(int** G1, int** G2, int n) {
@@ -152,6 +168,18 @@ void perese4(int** G1, int** G2, int n) {
 	}
 	printf("Результат пересечения графов: \n");
 	print_G(res, n);
+	for (int i = 0; i < n; i++) {
+		free(mat1[i]);
+	}
+	free(mat1);
+	for (int i = 0; i < n; i++) {
+		free(mat2[i]);
+	}
+	free(mat2);
+	for (int i = 0; i < n; i++) {
+		free(res[i]);
+	}
+	free(res);
 }
 
 void kolcsumm(int** G1, int** G2, int n) {
@@ -187,6 +215,19 @@ void kolcsumm(int** G1, int** G2, int n) {
 	}
 	printf("Кольцевая сумма графов: \n");
 	print_G(res, n);
+
+	for (int i = 0; i < n; i++) {
+		free(mat1[i]);
+	}
+	free(mat1);
+	for (int i = 0; i < n; i++) {
+		free(mat2[i]);
+	}
+	free(mat2);
+	for (int i = 0; i < n; i++) {
+		free(res[i]);
+	}
+	free(res);
 }
 
 int main() {
@@ -213,15 +254,14 @@ int main() {
 
 	printf("Введите 2 вершины 1 графа для отождествления: ");
 	scanf("%d %d", &x1, &x2);
-	identification(x1, x2, G1, n);
+	otojd(x1, x2, G1, n);
 
 	printf("Введите 2 вершины 2 графа для отождествления: ");
 	scanf("%d %d", &x1, &x2);
-	identification(x1, x2, G2, n);
+	otojd(x1, x2, G2, n);
 
-	printf("\nВВедите 2 вершины в матрице 1 для стягивания: ");
-	for (;;)
-	{
+	printf("\nВВедите 2  смежные вершины в матрице 1 для стягивания: ");
+	for (;;) {
 		scanf_s("%d", &x1);
 		scanf_s("%d", &x2);
 		if (G1[x1 - 1][x2 - 1] == 1)
@@ -229,9 +269,9 @@ int main() {
 		else
 			printf("Ошибка, введите заново: ");
 	}
-	identification(x1, x2, G1, n);
+	otojd(x1, x2, G1, n);
 	
-	printf("\nВведите 2 вершины в матрице 2 для стягивания: ");
+	printf("\nВведите 2 смежные вершины в матрице 2 для стягивания: ");
 	for (;;) {
 		scanf_s("%d", &x1);
 		scanf_s("%d", &x2);
@@ -240,9 +280,18 @@ int main() {
 		else
 			printf("Ошибка, введите заново: ");
 	}
-	identification(x1, x2, G2, n);
+	otojd(x1, x2, G2, n);
 
 	obed(G1, G2, n);
 	perese4(G1, G2, n);
 	kolcsumm(G1, G2, n);
+
+	for (int i = 0; i < n; i++) {
+		free(G1[i]);
+	}
+	free(G1);
+	for (int i = 0; i < n; i++) {
+		free(G2[i]);
+	}
+	free(G2);
 }
